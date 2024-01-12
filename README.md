@@ -13,7 +13,7 @@ We have been working at the moment with `data/nasa` folder.
 *Image used for flow computation* | *Image used for flow computation*
 
 <div align="center">
-    <img src="data/data/nasa/horn_output.png" alt="Optical Flow computed with Horn method">
+    <img src="data/data/nasa/horn_output_2.png" alt="Optical Flow computed with Horn method">
     <p><em>Optical Flow computed with Horn method</em></p>
 </div>
 
