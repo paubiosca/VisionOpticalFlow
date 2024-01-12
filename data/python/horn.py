@@ -4,8 +4,11 @@ import os
 
 from flowToColorLib import flow_to_color
 from readFlowFile import read_flow_file
+from middlebury import computeColor, readflo
+from utils import angular_error, get_image_names, get_GT_optical_flow_file
+import os
 
-def grad_horn(im1, im2):
+def gradhorn(im1, im2):
     # Compute derivatives
     Ix = 0.25 * (np.roll(im1, -1, axis=1) - np.roll(im1, 1, axis=1) + 
                  np.roll(im2, -1, axis=1) - np.roll(im2, 1, axis=1))
@@ -18,7 +21,7 @@ def grad_horn(im1, im2):
 
 def horn(im1, im2, alpha, N):
     # Compute derivatives
-    Ix, Iy, It = grad_horn(im1, im2)
+    Ix, Iy, It = gradhorn(im1, im2)
     
     # Initialize flow vectors
     u = np.zeros(im1.shape)
@@ -51,35 +54,42 @@ def read_image_placeholder(filename):
     
     return im
 
-
-def main():
+def main(folder = 'nasa', method = 'horn'):
     # Get the current working directory
     cwd = os.getcwd()
     SCRIPTS_DIR = os.path.dirname(cwd)
-    DATA_DIR = os.path.join(SCRIPTS_DIR, 'data', 'nasa')
+    DATA_DIR = os.path.join(SCRIPTS_DIR, 'data', folder)
     print('Data directory: ', DATA_DIR)
     
-    I1 = read_image_placeholder(os.path.join(DATA_DIR, 'nasa9.png'))
-    I2 = read_image_placeholder(os.path.join(DATA_DIR, 'nasa10.png'))
+    image_name_1, image_name_2 = get_image_names(folder)
+    
+    I1 = read_image_placeholder(os.path.join(DATA_DIR, image_name_1))
+    I2 = read_image_placeholder(os.path.join(DATA_DIR, image_name_2))
 
     # Set parameters for the algorithm
-    alpha = 0.8  # the regularization parameter
-    N = 10000    # number of iterations
+    alpha = 1  # the regularization parameter
+    N = 1000   # number of iterations
 
     # Apply the Horn-Schunck method
     u, v = horn(I1, I2, alpha, N)
+    FLOW = np.dstack((u, v))
     
     # Use FlowToColor to visualize the optical flow
-    flow_color_image = flow_to_color(np.dstack((u, v)))
+    flow_color_image = computeColor(np.dstack((u, v)))
     # Display image with optical flow on top
-    print('Saving output to data/horn_output.png')
-    cv2.imwrite(os.path.join(DATA_DIR, 'horn_output.png'), flow_color_image)
+    print('Saving output to data/horn_output_2.png')
+    cv2.imwrite(os.path.join(DATA_DIR, 'horn_output_2.png'), flow_color_image)
     
     # LOAD GROUND TRUTH FLOW TO BE DONE!!!
-    # # Test the function with a placeholder filename (this will only work with a valid .flo file)
-    # filename = os.path.join(DATA_DIR, 'nasa_horn_png')
-    # flow_img_GT = read_flow_file(filename)
-    # print(flow_img_GT.shape)  # Should show (height, width, 2) if successful
+    GT_FLOW = get_GT_optical_flow_file(DATA_DIR)
+    
+    if (GT_FLOW is not None):
+        # Compute the angular error
+        mean_angle_error, std_angle_error = angular_error(FLOW, GT_FLOW)
+        print('Mean angular error: {:.2f}'.format(round(mean_angle_error, 2)))
+        print('Standard deviation of angular error: {:.2f}'.format(round(std_angle_error, 2)))
+    
     
 if __name__ == '__main__':
-    main()
+    FOLDER = 'rubberwhale'
+    main(folder = FOLDER)
