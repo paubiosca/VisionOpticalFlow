@@ -21,7 +21,7 @@ We have been working at the moment with `data/nasa` folder.
 
 # TODO
 
-- [ ] Take a look at `middlebury.py` and understand which functions we have to use (Visualization, reading GT, etc.)
+- [X] Take a look at `middlebury.py` and understand which functions we have to use (Visualization, reading GT, etc.) (Done for Horn method)
 - [ ] Implement the Lucas-Kanade method correctly
-- [ ] Implement reading GT function in both horn and lucas (I've translated the matlab code to python)
-- [ ] Compare the results of the two methods with the GT to find the best Hyperparameters
+- [X] Implement reading GT function in both horn and lucas (I've translated the matlab code to python) done for Horn method
+- [ ] Compare the results of the two methods with the GT to find the best Hyperparameters (This is the important part)

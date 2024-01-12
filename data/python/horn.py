@@ -68,7 +68,7 @@ def main(folder = 'nasa', method = 'horn'):
 
     # Set parameters for the algorithm
     alpha = 1  # the regularization parameter
-    N = 1000   # number of iterations
+    N = 10000   # number of iterations
 
     # Apply the Horn-Schunck method
     u, v = horn(I1, I2, alpha, N)
@@ -91,5 +91,5 @@ def main(folder = 'nasa', method = 'horn'):
     
     
 if __name__ == '__main__':
-    FOLDER = 'rubberwhale'
+    FOLDER = 'nasa'
     main(folder = FOLDER)
