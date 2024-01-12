@@ -6,7 +6,7 @@ The scripts are:
 - `horn.py`: this script contains all the functions we need to compute the optical flow using Horn-Schunck method.
 - `lucas.py`: this script contains all the functions we need to compute the optical flow using Lucas-Kanade method.
 
-We have been working at the moment with data/nasa/ folder.
+We have been working at the moment with `data/nasa` folder.
 
 ![NASA Image 9](data/data/nasa/nasa9.png) | ![NASA Image 10](data/data/nasa/nasa10.png)
 :---:|:---:
