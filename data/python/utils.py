@@ -1,6 +1,21 @@
+import csv
 import numpy as np
 import os
 from middlebury import computeColor, readflo
+
+def end_point_error(I_gt,I_hat):
+    """
+    Compute the endpoint error between the estimated flow and the ground truth flow.
+    Parameters:
+    estimated_flow: numpy.ndarray, the estimated optical flow.
+    ground_truth_flow: numpy.ndarray, the ground truth optical flow.
+
+    Returns:
+    endpoint_error: numpy.ndarray, the endpoint errors for each pixel.
+    """
+    return np.sqrt((I_gt[:,:,0] - I_hat[:,:,0])**2 + ((I_gt[:,:,1] - I_hat[:,:,1])**2))
+
+
 
 def angular_error(estimated_flow, ground_truth_flow):
     """
@@ -35,6 +50,24 @@ def angular_error(estimated_flow, ground_truth_flow):
     std_angular_error = np.std(angle_error_degrees)
 
     return mean_angular_error, std_angular_error
+
+def relative_norm_error(I_gt,I_hat,eps = 0.00001):
+    """
+    Compute the relative norm error between the estimated flow and the ground truth flow.
+
+    Parameters:
+    estimated_flow: numpy.ndarray, the estimated optical flow.
+    ground_truth_flow: numpy.ndarray, the ground truth optical flow.
+    eps: float, a small value to avoid division by zero.
+
+    Returns:
+    relative_norm_error: numpy.ndarray, the relative norm errors for each pixel.
+    """
+    gt_norm = np.sqrt(I_gt[:,:,0]**2 + (I_gt[:,:,1])**2)
+    estim_norm = np.sqrt(I_hat[:,:,0]**2 + (I_hat[:,:,1])**2)
+    
+    return (gt_norm - estim_norm)/(gt_norm + eps)
+
 
 def get_image_names(folder = 'nasa'):
     if folder == 'nasa':
@@ -80,8 +113,22 @@ def get_GT_optical_flow_file(DATA_DIR):
         return gt_flow
             
     
-        
+def print_statistics(statistics):
+    for key, value in statistics.items():
+        print(key, ' : ', value)
         
     
-    
+def save_statistics_to_csv(statistics, DATA_DIR):
+    # Save statistics to CSV file
+    csv_filename = os.path.join(DATA_DIR, 'statistics.csv')
+    with open(csv_filename, mode='w', newline='') as csvfile:
+        fieldnames = ['Error Type', 'Mean', 'Standard Deviation']
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+
+        writer.writeheader()
+        for error_name, values in statistics.items():
+            writer.writerow({'Error Type': error_name,
+                                'Mean': np.mean(values['mean']),
+                                'Standard Deviation': np.mean(values['std'])})
+
         

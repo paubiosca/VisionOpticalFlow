@@ -1,3 +1,4 @@
+import argparse
 import cv2
 import numpy as np
 import os
@@ -5,7 +6,7 @@ import os
 from flowToColorLib import flow_to_color
 from readFlowFile import read_flow_file
 from middlebury import computeColor, readflo
-from utils import angular_error, get_image_names, get_GT_optical_flow_file
+from utils import angular_error, get_image_names, get_GT_optical_flow_file, end_point_error, print_statistics, relative_norm_error, save_statistics_to_csv
 import os
 
 def gradhorn(im1, im2):
@@ -56,25 +57,27 @@ def read_image_placeholder(filename):
     
     return im
 
-def main(folder = 'nasa', method = 'horn'):
+def main(args):
+    # 3. Choose N (number of iterations) and α (regularization) --> parameters of the algorithm
+    dir = args.dir
+    alpha = args.alpha  # the regularization parameter
+    N = args.iterations   # number of iterations
+
     # Get the current working directory
     cwd = os.getcwd()
     SCRIPTS_DIR = os.path.dirname(cwd)
-    DATA_DIR = os.path.join(SCRIPTS_DIR, 'data', folder)
+    DATA_DIR = os.path.join(SCRIPTS_DIR, 'data', dir)
     print('Data directory: ', DATA_DIR)
     
     # 1. Read two images I1, I2 (same size and dimensions)
-    image_name_1, image_name_2 = get_image_names(folder)
+    image_name_1, image_name_2 = get_image_names(dir)
     I1 = read_image_placeholder(os.path.join(DATA_DIR, image_name_1))
     I2 = read_image_placeholder(os.path.join(DATA_DIR, image_name_2))
 
-    # 3. Choose N (number of iterations) and α (regularization) --> parameters of the algorithm
-    alpha = 1  # the regularization parameter
-    N = 10000   # number of iterations
 
     # Apply the Horn-Schunck method
     u, v = horn(I1, I2, alpha, N)
-    flow = np.dstack((u, v))
+    flow = np.dstack((u, v)) # estimated flow
     
     # 6. Visualization of optical flow (velocity map) with function computeColor() from middlebury.py
     flow_color_image = computeColor(np.dstack((u, v)))
@@ -85,14 +88,37 @@ def main(folder = 'nasa', method = 'horn'):
     # LOAD GROUND TRUTH FLOW TO BE DONE!!!
     # 7. If available: read the ground truth with the function readFlowFile() and compare with (uN , vN ) (see next subsection).
     gt_flow = get_GT_optical_flow_file(DATA_DIR)
-    
+
+
+    # 3. if a ground truth is available, you would compute several statistics (mean, standard deviation) of End-Point error, angular error, norm error. 
+    statistics = {}
     if (gt_flow is not None):
-        # Compute the angular error
-        mean_angle_error, std_angle_error = angular_error(flow, gt_flow)
-        print('Mean angular error: {:.2f}'.format(round(mean_angle_error, 2)))
-        print('Standard deviation of angular error: {:.2f}'.format(round(std_angle_error, 2)))
-    
+        # Compute several errors
+        error_functions = [ angular_error, end_point_error, relative_norm_error]
+
+        for error_func in error_functions:
+            error_img = error_func(flow, gt_flow)
+            mean_error = np.mean(error_img)
+            std_error = np.std(error_img)
+
+            # Initialize the dictionary if it doesn't exist
+            statistics[error_func.__name__] = {"mean": [], "std": []}
+            
+            statistics[error_func.__name__]["mean"].append(mean_error)
+            statistics[error_func.__name__]["std"].append(std_error)
+        
+        # Display the statistics
+        print_statistics(statistics)
+
+        # save statistics into csv file
+        save_statistics_to_csv(statistics, DATA_DIR)
+
     
 if __name__ == '__main__':
-    FOLDER = 'nasa'
-    main(folder = FOLDER)
+    parser = argparse.ArgumentParser(description='Horn-Schunck Optical Flow')
+    parser.add_argument('--dir', '-d', type=str, default='nasa', help='dir containing images')
+    parser.add_argument('--alpha', type=float, default=1.0, help='Regularization parameter')
+    parser.add_argument('--iterations', type=int, default=10000, help='Number of iterations')
+    
+    args = parser.parse_args()
+    main(args)
