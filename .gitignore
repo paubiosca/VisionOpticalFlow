@@ -26,3 +26,8 @@ env2/
 # Miscellaneous
 *.swp
 .DS_Store
+
+# dataset
+data/*
+results/*
+
